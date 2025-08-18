@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDV Profissional</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="pdv-container">
+    <!-- Header -->
+    <header class="pdv-header">
+      <div class="header-left">
+        <i class="fas fa-cash-register"></i>
+        <h1>PDV Profissional</h1>
+      </div>
+      <div class="header-right">
+        <span class="date-time">segunda-feira, 4 de agosto de 2025 12:37:42</span>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="pdv-main">
+      <!-- Products Section -->
+      <div class="products-section">
+        <div class="section-header">
+          <i class="fas fa-box"></i>
+          <h2>Produtos</h2>
+        </div>
+        
+        <div class="search-bar">
+          <i class="fas fa-search"></i>
+          <input type="text" id="search-product" placeholder="Buscar produto">
+        </div>
+
+        <div class="products-grid" id="products-grid">
+          <!-- Products will be loaded here -->
+        </div>
+      </div>
+
+      <!-- Cart Section -->
+      <div class="cart-section">
+        <div class="section-header">
+          <i class="fas fa-shopping-cart"></i>
+          <h2>Carrinho</h2>
+        </div>
+
+        <div class="cart-content" id="cart-content">
+          <div class="empty-cart">
+            <p>Carrinho vazio</p>
+          </div>
+        </div>
+
+        <div class="cart-summary">
+          <div class="summary-row">
+            <span>Subtotal:</span>
+            <span id="subtotal">R$ 0,00</span>
+          </div>
+          <div class="summary-row discount-row">
+            <span>Desconto:</span>
+            <div class="discount-input">
+              <input type="number" id="discount" value="0" min="0" max="100">
+              <span>%</span>
+            </div>
+          </div>
+          <div class="summary-row total-row">
+            <span>Total:</span>
+            <span id="total">R$ 0,00</span>
+          </div>
+        </div>
+
+        <div class="payment-methods">
+          <h3>Forma de Pagamento</h3>
+          <div class="payment-buttons">
+            <button class="payment-btn active" data-method="dinheiro">
+              <i class="fas fa-money-bill"></i>
+              Dinheiro
+            </button>
+            <button class="payment-btn" data-method="cartao">
+              <i class="fas fa-credit-card"></i>
+              Cartão
+            </button>
+            <button class="payment-btn" data-method="pix">
+              <i class="fas fa-qrcode"></i>
+              PIX
+            </button>
+            <button class="payment-btn" data-method="cancelada">
+              <i class="fas fa-times-circle"></i>
+              Canceladas
+            </button>
+          </div>
+        </div>
+
+        <div class="cart-actions">
+          <button class="btn-clear" id="btn-clear">
+            <i class="fas fa-trash"></i>
+            Limpar
+          </button>
+          <button class="btn-finalize" id="btn-finalize">
+            <i class="fas fa-check"></i>
+            Finalizar Venda
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="pdv-footer">
+      <div class="footer-left">
+        <button class="btn-report">
+          <i class="fas fa-chart-bar"></i>
+          Relatório do Dia
+        </button>
+      </div>
+      <div class="footer-right">
+        <span>Vendas hoje: <strong id="sales-today">0</strong></span>
+        <span>Faturamento: <strong id="revenue-today">R$ 0,00</strong></span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="vendas.js"></script>
+  <!-- Modal de Pré-visualização do Recibo -->
+  <div id="receipt-modal" class="modal" style="display:none" aria-hidden="true">
+    <div class="modal-backdrop" id="receipt-backdrop"></div>
+    <div class="modal-content receipt-content" role="dialog" aria-modal="true" aria-labelledby="receipt-title">
+      <div class="modal-header">
+        <h3 id="receipt-title">Recibo de Venda</h3>
+        <button id="receipt-close" class="modal-close" aria-label="Fechar">×</button>
+      </div>
+      <div id="receipt-body" class="modal-body">
+        <!-- HTML do recibo será injetado aqui -->
+      </div>
+      <div class="modal-footer">
+        <button id="receipt-print" class="btn-primary">Imprimir</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

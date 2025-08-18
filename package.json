@@ -1,0 +1,72 @@
+{
+  "name": "pdv-electron",
+  "version": "1.0.0",
+  "description": "PDV Offline com Electron, SQLite e ativação offline",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "build": "electron-builder --win nsis",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "keywords": [
+    "pdv",
+    "electron",
+    "sqlite",
+    "offline",
+    "ativacao"
+  ],
+  "author": "",
+  "license": "MIT",
+  "build": {
+    "appId": "com.suaempresa.pdv",
+    "productName": "PDV Electron",
+    "directories": {
+      "output": "dist"
+    },
+    "asar": true,
+    "asarUnpack": [
+      "**/*.node",
+      "**/sqlite3/**/*"
+    ],
+    "files": [
+      "**/*",
+      "!dist/**",
+      "!**/*.map",
+      "!**/node_modules/.cache/**"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "PDV Electron",
+      "artifactName": "PDV-Setup-${version}-${arch}.${ext}"
+    },
+    "publish": [
+      {
+        "provider": "generic",
+        "url": ""
+      }
+    ]
+  },
+  "dependencies": {
+    "chart.js": "^4.5.0",
+    "crypto-js": "^4.2.0",
+    "sqlite3": "^5.1.6"
+  },
+  "devDependencies": {
+    "electron": "^29.0.0",
+    "electron-builder": "^24.9.1"
+  }
+}

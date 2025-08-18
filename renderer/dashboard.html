@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - PDV Profissional</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            background-color: #f4f7f6;
+        }
+        .dashboard-container {
+            padding: 2rem;
+        }
+        .dashboard-filters {
+            background-color: #fff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card h3 {
+            margin-top: 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            color: #333;
+        }
+
+        /* Header */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .header-title i {
+            font-size: 2rem;
+            color: #4a5568;
+        }
+        .header-title h1 {
+            font-size: 2.25rem;
+            color: #2d3748;
+            margin: 0;
+        }
+        .btn-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Metric Cards */
+        .metric-card {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 1.5rem;
+        }
+        .metric-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            color: #fff;
+            flex-shrink: 0;
+        }
+        .metric-icon.revenue { background-color: #48bb78; } /* green */
+        .metric-icon.sales { background-color: #4299e1; } /* blue */
+        .metric-icon.ticket { background-color: #f56565; } /* red */
+
+        .metric-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .metric-title {
+            font-size: 1rem;
+            color: #718096;
+            margin-bottom: 0.25rem;
+        }
+        .metric-value {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        /* Ajuste no grid para os novos cards */
+        .dashboard-grid {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+        /* Top Products List */
+        .top-products-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .top-product-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #edf2f7;
+        }
+        .top-product-item:last-child {
+            border-bottom: none;
+        }
+        .product-rank {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #a0aec0;
+            width: 30px;
+            text-align: center;
+        }
+        .product-name {
+            flex-grow: 1;
+            padding: 0 1rem;
+            color: #4a5568;
+        }
+        .product-sales {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #718096;
+            background-color: #f0f4f8;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+        }
+        .no-sales {
+            color: #718096;
+            text-align: center;
+            padding: 2rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <div class="header-title">
+                <i class="fas fa-chart-pie"></i>
+                <h1>Dashboard</h1>
+            </div>
+            <a href="index.html" class="btn btn-primary btn-icon">
+                <i class="fas fa-arrow-left"></i>
+                Voltar para Vendas
+            </a>
+        </header>
+
+        <div class="dashboard-filters">
+            <label for="start-date">De:</label>
+            <input type="date" id="start-date" class="form-control">
+            <label for="end-date">Até:</label>
+            <input type="date" id="end-date" class="form-control">
+            <button id="filter-btn" class="btn">Filtrar</button>
+        </div>
+
+        <main class="dashboard-grid">
+        <!-- Métricas Principais -->
+        <div class="card metric-card">
+            <div class="metric-icon revenue">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="metric-info">
+                <span class="metric-title">Faturamento Total</span>
+                <span class="metric-value" id="faturamento-total">R$ 0,00</span>
+            </div>
+        </div>
+
+        <div class="card metric-card">
+            <div class="metric-icon sales">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="metric-info">
+                <span class="metric-title">Vendas Realizadas</span>
+                <span class="metric-value" id="numero-vendas">0</span>
+            </div>
+        </div>
+
+        <div class="card metric-card">
+            <div class="metric-icon ticket">
+                <i class="fas fa-receipt"></i>
+            </div>
+            <div class="metric-info">
+                <span class="metric-title">Ticket Médio</span>
+                <span class="metric-value" id="ticket-medio">R$ 0,00</span>
+            </div>
+        </div>
+
+        <!-- Produtos Mais Vendidos -->
+        <div class="card">
+            <h3>Top 5 Produtos Mais Vendidos</h3>
+            <div id="produtos-mais-vendidos-container"></div>
+        </div>
+
+        <!-- Gráfico de Desempenho de Vendas -->
+        <div class="card">
+            <h3>Desempenho (Últimos 7 Dias)</h3>
+            <canvas id="desempenho-vendas-chart"></canvas>
+        </div>
+
+        <!-- Gráfico de Métodos de Pagamento -->
+        <div class="card">
+            <h3>Formas de Pagamento</h3>
+            <canvas id="metodos-pagamento-chart"></canvas>
+        </div>
+    </main>
+
+    <script src="../node_modules/chart.js/dist/chart.umd.js"></script>
+    <script src="./dashboard.js"></script>
+</body>
+</html>
