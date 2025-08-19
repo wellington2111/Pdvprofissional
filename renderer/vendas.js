@@ -9,6 +9,9 @@ class PDVSystem {
         this.revenueToday = 0;
         this.isFinancialsVisible = true;
         this.completedSales = [];
+        // Campos auxiliares para pagamento em dinheiro (somente UI)
+        this.amountReceived = 0;
+        this.changeAmount = 0;
     }
 
     async init() {
@@ -299,6 +302,108 @@ class PDVSystem {
         }
     }
 
+    // --- Modal de Pagamento ---
+    openPaymentModal() {
+        if (this.cart.length === 0) {
+            alert('O carrinho está vazio.');
+            return;
+        }
+        const modal = document.getElementById('payment-modal');
+        const backdrop = document.getElementById('payment-backdrop');
+        const cancelBtn = document.getElementById('payment-cancel');
+        const confirmBtn = document.getElementById('payment-confirm');
+        const radios = Array.from(document.querySelectorAll('input[name="payment-method-radio"]'));
+        const dinheiroExtra = document.getElementById('dinheiro-extra');
+        const amountInput = document.getElementById('amount-received-input');
+        const totalEl = document.getElementById('payment-total-amount');
+        const changeEl = document.getElementById('payment-change-amount');
+
+        // Atualiza total do modal
+        const subtotal = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const discountAmount = subtotal * (this.discount / 100);
+        const total = subtotal - discountAmount;
+        totalEl.textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
+        changeEl.textContent = 'R$ 0,00';
+        amountInput.value = '';
+        this.amountReceived = 0;
+        this.changeAmount = 0;
+
+        // Estado inicial: dinheiro selecionado
+        radios.forEach(r => { r.checked = (r.value.toLowerCase() === 'dinheiro'); });
+        dinheiroExtra.style.display = 'block';
+
+        const onRadioChange = () => {
+            const selected = radios.find(r => r.checked)?.value || 'dinheiro';
+            if (selected.toLowerCase().startsWith('cartão') || selected.toLowerCase() === 'pix' || selected.toLowerCase() === 'cancelada') {
+                dinheiroExtra.style.display = 'none';
+            } else {
+                dinheiroExtra.style.display = 'block';
+            }
+        };
+        radios.forEach(r => r.addEventListener('change', onRadioChange, { once: false }));
+
+        const recalcChange = () => {
+            const val = parseFloat(String(amountInput.value).replace(',', '.')) || 0;
+            this.amountReceived = val;
+            const diff = val - total;
+            this.changeAmount = diff > 0 ? diff : 0;
+            changeEl.textContent = `R$ ${this.changeAmount.toFixed(2).replace('.', ',')}`;
+        };
+        amountInput.addEventListener('input', recalcChange);
+
+        const close = () => {
+            modal.style.display = 'none';
+            modal.style.pointerEvents = 'none';
+            modal.style.visibility = 'hidden';
+            modal.setAttribute('aria-hidden','true');
+            // Remove handlers que usamos
+            backdrop.removeEventListener('click', close);
+            cancelBtn.removeEventListener('click', close);
+            confirmBtn.removeEventListener('click', onConfirm);
+            amountInput.removeEventListener('input', recalcChange);
+            radios.forEach(r => r.removeEventListener('change', onRadioChange));
+            // devolve foco ao campo de busca
+            const search = document.getElementById('search-product');
+            if (search) setTimeout(() => { search.focus(); try { search.setSelectionRange(search.value.length, search.value.length); } catch (_) {} }, 0);
+        };
+
+        const onConfirm = async () => {
+            const selected = radios.find(r => r.checked)?.value || 'dinheiro';
+            if (selected === 'cancelada') {
+                const ok = confirm('Cancelar a finalização? A venda NÃO será registrada.');
+                if (ok) close();
+                return;
+            }
+            if (selected.toLowerCase() === 'dinheiro') {
+                if (this.amountReceived < total) {
+                    alert('Valor recebido menor que o total.');
+                    return;
+                }
+                this.selectedPaymentMethod = 'dinheiro';
+            } else if (selected === 'Cartão (Débito)') {
+                this.selectedPaymentMethod = 'Cartão (Débito)';
+            } else if (selected === 'Cartão (Crédito)') {
+                this.selectedPaymentMethod = 'Cartão (Crédito)';
+            } else if (selected.toLowerCase() === 'pix') {
+                this.selectedPaymentMethod = 'pix';
+            }
+            this.updatePaymentMethodUI();
+            close();
+            await this.finalizeSale();
+        };
+
+        confirmBtn.addEventListener('click', onConfirm);
+        cancelBtn.addEventListener('click', close);
+        backdrop.addEventListener('click', close);
+
+        modal.hidden = false;
+        modal.removeAttribute('aria-hidden');
+        modal.style.display = 'flex';
+        modal.style.pointerEvents = 'auto';
+        modal.style.visibility = 'visible';
+        try { amountInput.focus(); } catch (_) {}
+    }
+
     async finalizeSale() {
         if (this.cart.length === 0) {
             alert('O carrinho está vazio.');
@@ -476,7 +581,7 @@ class PDVSystem {
                 }
             }
         });
-        document.getElementById('btn-finalize').addEventListener('click', () => this.finalizeSale());
+        document.getElementById('btn-finalize').addEventListener('click', () => this.openPaymentModal());
         
         document.querySelector('.btn-report').addEventListener('click', () => this.openReportModal());
         document.getElementById('close-report-modal-btn').addEventListener('click', () => this.closeReportModal());

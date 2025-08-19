@@ -71,7 +71,7 @@
           </div>
         </div>
 
-        <div class="payment-methods">
+        <div class="payment-methods" style="display: none;">
           <h3>Forma de Pagamento</h3>
           <div class="payment-buttons">
             <button class="payment-btn active" data-method="dinheiro">
@@ -135,6 +135,55 @@
       </div>
       <div class="modal-footer">
         <button id="receipt-print" class="btn-primary">Imprimir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Seleção de Pagamento -->
+  <div id="payment-modal" class="modal" style="display:none" aria-hidden="true">
+    <div class="modal-backdrop" id="payment-backdrop"></div>
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="payment-title">
+      <div class="modal-header">
+        <h3 id="payment-title">Finalizar Pagamento</h3>
+        <button id="payment-cancel" class="modal-close" aria-label="Fechar">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="payment-options">
+          <label style="display:flex;align-items:center;gap:8px;margin:6px 0;">
+            <input type="radio" name="payment-method-radio" id="pm-dinheiro" value="dinheiro" checked>
+            <span>Dinheiro</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;margin:6px 0;">
+            <input type="radio" name="payment-method-radio" id="pm-debito" value="Cartão (Débito)">
+            <span>Cartão (Débito)</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;margin:6px 0;">
+            <input type="radio" name="payment-method-radio" id="pm-credito" value="Cartão (Crédito)">
+            <span>Cartão (Crédito)</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;margin:6px 0;">
+            <input type="radio" name="payment-method-radio" id="pm-pix" value="pix">
+            <span>PIX</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;margin:6px 0;">
+            <input type="radio" name="payment-method-radio" id="pm-cancelada" value="cancelada">
+            <span>Cancelar venda</span>
+          </label>
+        </div>
+
+        <div id="dinheiro-extra" style="display:block; margin-top:12px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <label for="amount-received-input" style="min-width:120px;">Valor recebido:</label>
+            <input id="amount-received-input" type="number" step="0.01" min="0" placeholder="0,00" style="flex:1; padding:6px 8px;">
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span>Total: <strong id="payment-total-amount">R$ 0,00</strong></span>
+            <span>Troco: <strong id="payment-change-amount">R$ 0,00</strong></span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="payment-confirm" class="btn-primary">Confirmar</button>
       </div>
     </div>
   </div>
