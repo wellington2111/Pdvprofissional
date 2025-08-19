@@ -804,8 +804,20 @@ class PDVSystem {
             const total = subtotal - discountAmount;
             const val = parseFloat(String(cashInput && cashInput.value || '0').replace(',', '.')) || 0;
             if (val < total) {
-                alert('Valor recebido menor que o total.');
-                try { cashInput && cashInput.focus(); cashInput.select && cashInput.select(); } catch (_) {}
+                // Feedback não bloqueante e foco no campo
+                try { window.electronAPI.showNotification('Informe o valor recebido', 'Use os botões rápidos ou digite o valor.'); } catch (_) {}
+                try {
+                    if (cashSectionEl && cashSectionEl.scrollIntoView) cashSectionEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } catch (_) {}
+                try {
+                    if (cashInput) {
+                        cashInput.classList.add('input-attention');
+                        cashInput.placeholder = (total || 0).toFixed(2);
+                        cashInput.focus();
+                        cashInput.select && cashInput.select();
+                        setTimeout(() => { try { cashInput.classList.remove('input-attention'); } catch (_) {} }, 1200);
+                    }
+                } catch (_) {}
                 return;
             }
             this.amountReceived = val;
