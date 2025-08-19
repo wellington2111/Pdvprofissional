@@ -308,6 +308,12 @@ class PDVSystem {
             alert('O carrinho está vazio.');
             return;
         }
+        // Se a forma atual NÃO é dinheiro, finaliza direto (cartão/pix não precisam de troco)
+        const current = String(this.selectedPaymentMethod || '').toLowerCase();
+        if (current !== 'dinheiro') {
+            this.finalizeSale();
+            return;
+        }
         const modal = document.getElementById('payment-modal');
         // Fallback: se o modal não existir (HTML antigo), finalize direto para não travar o fluxo
         if (!modal) {
