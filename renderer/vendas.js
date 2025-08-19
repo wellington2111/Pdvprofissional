@@ -569,6 +569,7 @@ class PDVSystem {
         const creditBtn = document.getElementById('credit-btn');
 
         const showCardModal = () => {
+            if (!cardTypeModal) return; // fallback se modal não existir
             cardTypeModal.hidden = false;
             cardTypeModal.removeAttribute('aria-hidden');
             cardTypeModal.style.display = 'flex';
@@ -576,6 +577,7 @@ class PDVSystem {
             cardTypeModal.style.visibility = 'visible';
         };
         const hideCardModal = () => {
+            if (!cardTypeModal) return;
             cardTypeModal.style.display = 'none';
             cardTypeModal.style.pointerEvents = 'none';
             cardTypeModal.style.visibility = 'hidden';
@@ -595,10 +597,10 @@ class PDVSystem {
             });
         });
         
-        debitBtn.addEventListener('click', () => { this.selectedPaymentMethod = 'Cartão (Débito)'; this.updatePaymentMethodUI(); hideCardModal(); });
-        creditBtn.addEventListener('click', () => { this.selectedPaymentMethod = 'Cartão (Crédito)'; this.updatePaymentMethodUI(); hideCardModal(); });
-        closeModalBtn.addEventListener('click', hideCardModal);
-        cardTypeModal.addEventListener('click', (e) => { if (e.target === cardTypeModal) hideCardModal(); });
+        if (debitBtn) debitBtn.addEventListener('click', () => { this.selectedPaymentMethod = 'Cartão (Débito)'; this.updatePaymentMethodUI(); hideCardModal(); });
+        if (creditBtn) creditBtn.addEventListener('click', () => { this.selectedPaymentMethod = 'Cartão (Crédito)'; this.updatePaymentMethodUI(); hideCardModal(); });
+        if (closeModalBtn) closeModalBtn.addEventListener('click', hideCardModal);
+        if (cardTypeModal) cardTypeModal.addEventListener('click', (e) => { if (e.target === cardTypeModal) hideCardModal(); });
 
         document.getElementById('discount').addEventListener('input', (e) => { this.discount = parseFloat(e.target.value) || 0; this.updateSummary(); });
         document.getElementById('btn-clear').addEventListener('click', () => {
@@ -756,14 +758,16 @@ class PDVSystem {
             btn.classList.remove('active');
             if (baseMethod === selectedBaseMethod) {
                 btn.classList.add('active');
-                if (baseMethod === 'cartao' && this.selectedPaymentMethod.includes('(')) {
-                    btn.querySelector('span').textContent = this.selectedPaymentMethod;
-                } else if (baseMethod === 'cartao') {
-                    btn.querySelector('span').textContent = 'Cartão';
+                const labelEl = btn.querySelector('span');
+                if (baseMethod === 'cartao' && this.selectedPaymentMethod.includes('(') && labelEl) {
+                    labelEl.textContent = this.selectedPaymentMethod;
+                } else if (baseMethod === 'cartao' && labelEl) {
+                    labelEl.textContent = 'Cartão';
                 }
             } else {
                 if (baseMethod === 'cartao') {
-                    btn.querySelector('span').textContent = 'Cartão';
+                    const labelEl = btn.querySelector('span');
+                    if (labelEl) labelEl.textContent = 'Cartão';
                 }
             }
         });
@@ -790,6 +794,10 @@ class PDVSystem {
         }
         const method = String(this.selectedPaymentMethod || '').toLowerCase();
         if (method === 'dinheiro') {
+            // Garante que a seção de dinheiro esteja visível antes da validação
+            this.updatePaymentMethodUI();
+            const cashSectionEl = document.getElementById('cash-section');
+            if (cashSectionEl) { cashSectionEl.style.display = 'block'; }
             const cashInput = document.getElementById('cash-amount');
             const subtotal = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             const discountAmount = subtotal * (this.discount / 100);
@@ -797,7 +805,7 @@ class PDVSystem {
             const val = parseFloat(String(cashInput && cashInput.value || '0').replace(',', '.')) || 0;
             if (val < total) {
                 alert('Valor recebido menor que o total.');
-                try { cashInput && cashInput.focus(); } catch (_) {}
+                try { cashInput && cashInput.focus(); cashInput.select && cashInput.select(); } catch (_) {}
                 return;
             }
             this.amountReceived = val;
