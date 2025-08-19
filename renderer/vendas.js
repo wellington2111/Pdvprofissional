@@ -776,7 +776,13 @@ class PDVSystem {
         if (cashSection) {
             const isMoney = (this.selectedPaymentMethod || '').toLowerCase() === 'dinheiro';
             cashSection.style.display = isMoney ? 'block' : 'none';
-            if (!isMoney) {
+            if (isMoney) {
+                try {
+                    const cashInput = document.getElementById('cash-amount');
+                    if (cashInput) { cashInput.focus(); cashInput.select && cashInput.select(); }
+                    if (cashSection.scrollIntoView) cashSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } catch (_) {}
+            } else {
                 this.amountReceived = 0;
                 this.changeAmount = 0;
                 const cashInput = document.getElementById('cash-amount');

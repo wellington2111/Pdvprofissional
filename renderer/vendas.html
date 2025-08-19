@@ -71,6 +71,24 @@
           </div>
         </div>
 
+        <!-- Seção Dinheiro: valor recebido e troco (movida para baixo do resumo) -->
+        <div id="cash-section" style="display: none; margin-top: 12px;">
+          <div style="margin-bottom: 8px; font-weight: 600;">Valor recebido</div>
+          <div class="cash-quick-buttons" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+            <button type="button" class="cash-btn" data-amount="10">R$ 10</button>
+            <button type="button" class="cash-btn" data-amount="20">R$ 20</button>
+            <button type="button" class="cash-btn" data-amount="50">R$ 50</button>
+            <button type="button" class="cash-btn" data-amount="100">R$ 100</button>
+            <button type="button" class="cash-btn" data-amount="200">R$ 200</button>
+            <button type="button" class="cash-btn" data-amount="exato">Exato</button>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+            <span>R$</span>
+            <input type="number" id="cash-amount" step="0.01" min="0" placeholder="0,00" style="flex:1; padding:6px 8px;">
+          </div>
+          <div style="font-weight:600;">Troco: <span id="cash-change">R$ 0,00</span></div>
+        </div>
+
         <div class="payment-methods">
           <h3>Forma de Pagamento</h3>
           <div class="payment-buttons">
@@ -90,24 +108,6 @@
               <i class="fas fa-times-circle"></i>
               Canceladas
             </button>
-          </div>
-
-          <!-- Seção Dinheiro: valor recebido e troco -->
-          <div id="cash-section" style="display: none; margin-top: 12px;">
-            <div style="margin-bottom: 8px; font-weight: 600;">Valor recebido</div>
-            <div class="cash-quick-buttons" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
-              <button type="button" class="cash-btn" data-amount="10">R$ 10</button>
-              <button type="button" class="cash-btn" data-amount="20">R$ 20</button>
-              <button type="button" class="cash-btn" data-amount="50">R$ 50</button>
-              <button type="button" class="cash-btn" data-amount="100">R$ 100</button>
-              <button type="button" class="cash-btn" data-amount="200">R$ 200</button>
-              <button type="button" class="cash-btn" data-amount="exato">Exato</button>
-            </div>
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-              <span>R$</span>
-              <input type="number" id="cash-amount" step="0.01" min="0" placeholder="0,00" style="flex:1; padding:6px 8px;">
-            </div>
-            <div style="font-weight:600;">Troco: <span id="cash-change">R$ 0,00</span></div>
           </div>
         </div>
 
