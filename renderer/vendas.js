@@ -309,6 +309,11 @@ class PDVSystem {
             return;
         }
         const modal = document.getElementById('payment-modal');
+        // Fallback: se o modal não existir (HTML antigo), finalize direto para não travar o fluxo
+        if (!modal) {
+            this.finalizeSale();
+            return;
+        }
         const backdrop = document.getElementById('payment-backdrop');
         const cancelBtn = document.getElementById('payment-cancel');
         const confirmBtn = document.getElementById('payment-confirm');
