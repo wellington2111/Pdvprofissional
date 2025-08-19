@@ -117,6 +117,12 @@ async function initializeDatabase() {
   if (!salesColumnNames.includes('status')) {
     await dbRun(`ALTER TABLE vendas ADD COLUMN status TEXT DEFAULT 'concluida'`);
   }
+  if (!salesColumnNames.includes('valor_recebido')) {
+    await dbRun(`ALTER TABLE vendas ADD COLUMN valor_recebido REAL`);
+  }
+  if (!salesColumnNames.includes('troco')) {
+    await dbRun(`ALTER TABLE vendas ADD COLUMN troco REAL`);
+  }
 
   // --- Criação de Índices para Performance ---
   // Acelera a busca de vendas por data (essencial para relatórios e dashboard)
@@ -224,10 +230,10 @@ function setupIpcHandlers() {
   });
 
   ipcMain.handle('vendas:registrar', async (event, vendaData) => {
-    const { total, metodoPagamento, itens } = vendaData;
+    const { total, metodoPagamento, itens, valorRecebido = null, troco = 0 } = vendaData;
     await dbRun('BEGIN TRANSACTION');
     try {
-      const result = await dbRun('INSERT INTO vendas (data, total, metodo_pagamento, status) VALUES (datetime(\'now\', \'localtime\'), ?, ?, ?)', [total, metodoPagamento, 'concluida']);
+      const result = await dbRun('INSERT INTO vendas (data, total, metodo_pagamento, status, valor_recebido, troco) VALUES (datetime(\'now\', \'localtime\'), ?, ?, ?, ?, ?)', [total, metodoPagamento, 'concluida', valorRecebido, troco]);
       const vendaId = result.lastID;
 
       for (const item of itens) {
@@ -274,7 +280,7 @@ function setupIpcHandlers() {
       const pageHeightMicrons = 500000; // 500mm (suficiente para recibos comuns)
 
       // Busca dados da venda e itens
-      const venda = await dbGet(`SELECT id, data, total, metodo_pagamento FROM vendas WHERE id = ?`, [vendaId]);
+      const venda = await dbGet(`SELECT id, data, total, metodo_pagamento, valor_recebido, troco FROM vendas WHERE id = ?`, [vendaId]);
       if (!venda) throw new Error('Venda não encontrada');
       const itens = await dbAll(`SELECT nome, quantidade, preco_unitario FROM itens_venda WHERE venda_id = ?`, [vendaId]);
 
@@ -290,6 +296,9 @@ function setupIpcHandlers() {
           <td style="text-align:right">${formatCurrency(it.preco_unitario)}</td>
           <td style="text-align:right">${formatCurrency((it.preco_unitario || 0) * (it.quantidade || 0))}</td>
         </tr>`).join('');
+
+      const recebidoStr = (typeof venda.valor_recebido === 'number' && !isNaN(venda.valor_recebido)) ? formatCurrency(venda.valor_recebido) : '';
+      const trocoStr = (typeof venda.troco === 'number' && !isNaN(venda.troco)) ? formatCurrency(venda.troco) : '';
 
       const html = `<!doctype html>
       <html>
@@ -331,6 +340,8 @@ function setupIpcHandlers() {
           </tbody>
         </table>
         <div class="totais"><strong>Total:</strong> ${formatCurrency(venda.total)}</div>
+        ${recebidoStr ? `<div class="totais"><strong>Recebido:</strong> ${recebidoStr}</div>` : ''}
+        ${trocoStr ? `<div class="totais"><strong>Troco:</strong> ${trocoStr}</div>` : ''}
         <div class="footer">Documento não fiscal</div>
       </body>
       </html>`;

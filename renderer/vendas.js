@@ -44,6 +44,11 @@ class PDVSystem {
         setInterval(() => this.updateDateTime(), 1000);
         this.setupEventListeners();
         this.setupReceiptModalListeners();
+        // Garante UI inicial consistente
+        this.renderProducts();
+        this.renderCart();
+        this.updateSummary();
+        this.updatePaymentMethodUI();
     }
 
     async reloadAllData() {
@@ -242,6 +247,18 @@ class PDVSystem {
         
         document.getElementById('subtotal').textContent = `R$ ${subtotal.toFixed(2).replace('.', ',')}`;
         document.getElementById('total').textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
+        // Recalcula troco na seção lateral, se houver
+        try {
+            const cashInput = document.getElementById('cash-amount');
+            const cashChange = document.getElementById('cash-change');
+            if (cashInput && cashChange && getComputedStyle(cashInput.closest('#cash-section')).display !== 'none') {
+                const val = parseFloat(String(cashInput.value).replace(',', '.')) || 0;
+                const diff = val - total;
+                this.amountReceived = val;
+                this.changeAmount = diff > 0 ? diff : 0;
+                cashChange.textContent = `R$ ${this.changeAmount.toFixed(2).replace('.', ',')}`;
+            }
+        } catch (_) {}
     }
 
     clearCart() {
@@ -446,7 +463,9 @@ class PDVSystem {
                 quantidade: item.quantity, 
                 price: item.price
             })),
-            metodoPagamento: this.selectedPaymentMethod
+            metodoPagamento: this.selectedPaymentMethod,
+            valorRecebido: (this.selectedPaymentMethod.toLowerCase() === 'dinheiro') ? this.amountReceived : null,
+            troco: (this.selectedPaymentMethod.toLowerCase() === 'dinheiro') ? this.changeAmount : 0
         };
 
         try {
@@ -592,7 +611,42 @@ class PDVSystem {
                 }
             }
         });
-        document.getElementById('btn-finalize').addEventListener('click', () => this.openPaymentModal());
+        // Finalização: usa seção lateral. Se Dinheiro, valida valor recebido; senão, finaliza direto
+        document.getElementById('btn-finalize').addEventListener('click', () => this.handleFinalizeClick());
+
+        // Seção de dinheiro (lateral)
+        const cashSection = document.getElementById('cash-section');
+        const cashInput = document.getElementById('cash-amount');
+        const cashChange = document.getElementById('cash-change');
+        const cashBtns = document.querySelectorAll('.cash-btn');
+
+        const recalcSidebarChange = () => {
+            if (!cashInput || !cashChange) return;
+            const subtotal = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const discountAmount = subtotal * (this.discount / 100);
+            const total = subtotal - discountAmount;
+            const val = parseFloat(String(cashInput.value).replace(',', '.')) || 0;
+            const diff = val - total;
+            this.amountReceived = val;
+            this.changeAmount = diff > 0 ? diff : 0;
+            cashChange.textContent = `R$ ${this.changeAmount.toFixed(2).replace('.', ',')}`;
+        };
+
+        cashInput && cashInput.addEventListener('input', recalcSidebarChange);
+        cashBtns && cashBtns.forEach(btn => btn.addEventListener('click', () => {
+            if (!cashInput) return;
+            const v = btn.dataset.amount;
+            if (v === 'exato') {
+                const subtotal = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const discountAmount = subtotal * (this.discount / 100);
+                const total = subtotal - discountAmount;
+                cashInput.value = String(total.toFixed(2));
+            } else {
+                cashInput.value = String(Number(v).toFixed(2));
+            }
+            recalcSidebarChange();
+            try { cashInput.focus(); cashInput.select(); } catch (_) {}
+        }));
         
         document.querySelector('.btn-report').addEventListener('click', () => this.openReportModal());
         document.getElementById('close-report-modal-btn').addEventListener('click', () => this.closeReportModal());
@@ -713,6 +767,45 @@ class PDVSystem {
                 }
             }
         });
+        // Mostrar/ocultar seção de dinheiro
+        const cashSection = document.getElementById('cash-section');
+        if (cashSection) {
+            const isMoney = (this.selectedPaymentMethod || '').toLowerCase() === 'dinheiro';
+            cashSection.style.display = isMoney ? 'block' : 'none';
+            if (!isMoney) {
+                this.amountReceived = 0;
+                this.changeAmount = 0;
+                const cashInput = document.getElementById('cash-amount');
+                const cashChange = document.getElementById('cash-change');
+                if (cashInput) cashInput.value = '';
+                if (cashChange) cashChange.textContent = 'R$ 0,00';
+            }
+        }
+    }
+
+    handleFinalizeClick() {
+        if (this.cart.length === 0) {
+            alert('O carrinho está vazio.');
+            return;
+        }
+        const method = String(this.selectedPaymentMethod || '').toLowerCase();
+        if (method === 'dinheiro') {
+            const cashInput = document.getElementById('cash-amount');
+            const subtotal = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const discountAmount = subtotal * (this.discount / 100);
+            const total = subtotal - discountAmount;
+            const val = parseFloat(String(cashInput && cashInput.value || '0').replace(',', '.')) || 0;
+            if (val < total) {
+                alert('Valor recebido menor que o total.');
+                try { cashInput && cashInput.focus(); } catch (_) {}
+                return;
+            }
+            this.amountReceived = val;
+            this.changeAmount = val - total;
+            this.finalizeSale();
+        } else {
+            this.finalizeSale();
+        }
     }
 
     updateDateTime() {
@@ -870,12 +963,19 @@ class PDVSystem {
                 const saleElement = document.createElement('div');
                 saleElement.className = 'report-sale-item';
     
+                const recebidoVal = (typeof sale.valor_recebido === 'number' && !isNaN(sale.valor_recebido)) ? `R$ ${sale.valor_recebido.toFixed(2).replace('.', ',')}` : '';
+                const trocoVal = (typeof sale.troco === 'number' && !isNaN(sale.troco)) ? `R$ ${sale.troco.toFixed(2).replace('.', ',')}` : '';
+                const totalTitle = (recebidoVal || trocoVal) 
+                    ? [`Total: R$ ${sale.total.toFixed(2).replace('.', ',')}`, recebidoVal ? `Recebido: ${recebidoVal}` : null, trocoVal ? `Troco: ${trocoVal}` : null]
+                        .filter(Boolean).join(' | ') 
+                    : `Total: R$ ${sale.total.toFixed(2).replace('.', ',')}`;
+
                 saleElement.innerHTML = `
                     <span class="report-select">${sale.status !== 'cancelada' ? `<input type="checkbox" class="select-sale" data-sale-id="${sale.id}">` : ''}</span>
                     <span class="report-id">${sale.id}</span>
                     <span class="report-date">${saleDate}</span>
                     <span class="report-items">${itemsCount}</span>
-                    <span class="report-total">R$ ${sale.total.toFixed(2).replace('.', ',')}</span>
+                    <span class="report-total" title="${totalTitle}">R$ ${sale.total.toFixed(2).replace('.', ',')}</span>
                     <span class="report-actions">
                         <button class="btn-details" data-sale-id="${sale.id}">Ver Detalhes</button>
                         ${(sale.status !== 'cancelada') ? `<button class="btn-receipt" data-sale-id="${sale.id}">Recibo</button>` : ''}
@@ -950,11 +1050,15 @@ class PDVSystem {
 
         const paymentMethod = sale.metodo_pagamento || 'Não informado';
         const total = sale.total ? `R$ ${sale.total.toFixed(2).replace('.', ',')}` : 'R$ --';
+        const recebidoStr = (typeof sale.valor_recebido === 'number' && !isNaN(sale.valor_recebido)) ? `R$ ${sale.valor_recebido.toFixed(2).replace('.', ',')}` : null;
+        const trocoStr = (typeof sale.troco === 'number' && !isNaN(sale.troco)) ? `R$ ${sale.troco.toFixed(2).replace('.', ',')}` : null;
 
         const summaryHtml = `
             <div class="sale-details-summary">
                 <p><strong>Total da Venda:</strong> <span>${total}</span></p>
                 <p><strong>Forma de Pagamento:</strong> <span>${paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1)}</span></p>
+                ${recebidoStr ? `<p><strong>Recebido:</strong> <span>${recebidoStr}</span></p>` : ''}
+                ${trocoStr ? `<p><strong>Troco:</strong> <span>${trocoStr}</span></p>` : ''}
             </div>
         `;
 
